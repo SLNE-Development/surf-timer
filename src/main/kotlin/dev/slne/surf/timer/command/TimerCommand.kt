@@ -3,6 +3,7 @@ package dev.slne.surf.timer.command
 import dev.jorel.commandapi.kotlindsl.*
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.surfapi.core.api.messages.builder.SurfComponentBuilder
 import dev.slne.surf.surfapi.core.api.messages.pagination.Pagination
 import dev.slne.surf.timer.command.argument.timerArgument
 import dev.slne.surf.timer.command.argument.timerDisplayArgument
@@ -40,8 +41,64 @@ fun timerCommand() = commandTree("timer") {
 
                     executor.sendText {
                         appendPrefix()
-                        success("Der Timer wurde erfolgreich erstellt.")
+                        success("Der Timer wurde erstellt und ")
+                        error("pausiert!", TextDecoration.BOLD)
                     }
+                }
+            }
+        }
+    }
+
+    literalArgument("pause") {
+        timerArgument("timer") {
+            anyExecutor { executor, args ->
+                val timer: Timer by args
+
+                if (timer.paused) {
+                    executor.sendText {
+                        appendPrefix()
+                        error("Der Timer ist bereits pausiert.")
+                    }
+                    return@anyExecutor
+                }
+
+                timer.paused = true
+
+                executor.sendText {
+                    appendPrefix()
+                    success("Der Timer wurde pausiert.")
+                }
+            }
+        }
+    }
+
+    literalArgument("resume") {
+        timerArgument("timer") {
+            anyExecutor { executor, args ->
+                val timer: Timer by args
+
+                if (!timer.paused) {
+                    executor.sendText {
+                        appendPrefix()
+                        error("Der Timer läuft bereits.")
+                    }
+                    return@anyExecutor
+                }
+
+                if (timer.remainingSeconds == 0L) {
+                    executor.sendText {
+                        appendPrefix()
+                        error("Der Timer wurde neu gestartet, da er bereits abgelaufen ist.")
+                    }
+                    timer.remainingSeconds = timer.seconds
+                    return@anyExecutor
+                }
+
+                timer.paused = false
+
+                executor.sendText {
+                    appendPrefix()
+                    success("Der Timer wurde fortgesetzt.")
                 }
             }
         }
@@ -126,29 +183,34 @@ fun timerCommand() = commandTree("timer") {
                 executor.sendText {
                     appendPrefix()
                     info("Timer-Informationen:")
-                    appendNewline()
+                    appendArrowedLine()
                     info("ID: ")
                     variableValue(timer.id)
-                    appendNewline()
+                    appendArrowedLine()
                     info("Ursprüngliche Zeit: ")
                     variableValue("${timer.seconds} Sekunden")
-                    appendNewline()
+                    appendArrowedLine()
                     info("Verbleibende Zeit: ")
                     variableValue("${timer.remainingSeconds} Sekunden")
-                    appendNewline()
+                    appendArrowedLine()
                     info("Chat-Benachrichtigungen: ")
                     variableValue(if (timer.chat) "Aktiviert" else "Deaktiviert")
-                    appendNewline()
+                    appendArrowedLine()
                     info("Actionbar-Benachrichtigungen: ")
                     variableValue(if (timer.actionbar) "Aktiviert" else "Deaktiviert")
-                    appendNewline()
+                    appendArrowedLine()
                     info("Hologramm-Updates: ")
                     variableValue(if (timer.hologram) "Aktiviert" else "Deaktiviert")
-                    appendNewline()
+                    appendArrowedLine()
                     info("Pausiert: ")
                     variableValue(if (timer.paused) "Ja" else "Nein")
                 }
             }
         }
     }
+}
+
+fun SurfComponentBuilder.appendArrowedLine() = append {
+    spacer("»")
+    appendSpace()
 }

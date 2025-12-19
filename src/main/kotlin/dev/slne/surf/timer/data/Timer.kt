@@ -1,6 +1,7 @@
 package dev.slne.surf.timer.data
 
 import dev.slne.surf.surfapi.bukkit.api.util.forEachPlayer
+import dev.slne.surf.surfapi.core.api.font.toSmallCaps
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import kotlinx.serialization.KSerializer
@@ -10,6 +11,7 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import java.time.Duration
 
@@ -68,7 +70,11 @@ data class Timer(
     }
 
     fun update() {
-        if (chat) {
+        if (remainingSeconds == 0L) {
+            paused = true
+        }
+
+        if (chat && !paused) {
             if (shouldNotify()) {
                 broadcastChat()
             }
@@ -91,20 +97,35 @@ data class Timer(
     }
 
     private fun broadcastActionbar() {
+        if (paused) {
+            forEachPlayer {
+                it.sendActionBar(buildText {
+                    spacer("»")
+                    appendSpace()
+                    error("Der Timer ist pausiert.".toSmallCaps(), TextDecoration.ITALIC)
+                    appendSpace()
+                    spacer("«")
+                })
+            }
+            return
+        }
+
         val message = actionbarFormat.replaceText {
             it.matchLiteral("<time>").replacement(formattedTimeMillis())
         }
 
         forEachPlayer {
-            it.sendText {
+            it.sendActionBar(buildText {
                 append(message)
-            }
+            })
         }
     }
 
     private fun formattedTimeMillis(): String {
         val duration = Duration.ofSeconds(remainingSeconds)
-        if (duration.isNegative) return "Unbegrenzt"
+        if (duration.isNegative) {
+            return "Unbegrenzt"
+        }
 
         var millis = duration.toMillis()
 
@@ -133,6 +154,7 @@ data class Timer(
     private fun shouldNotify(): Boolean {
         val remaining = Duration.ofSeconds(remainingSeconds)
         val total = Duration.ofSeconds(seconds)
+
         if (remaining.isZero || remaining.isNegative) {
             return false
         }

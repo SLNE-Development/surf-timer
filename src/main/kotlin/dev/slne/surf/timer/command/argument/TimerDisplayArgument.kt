@@ -2,6 +2,7 @@ package dev.slne.surf.timer.command.argument
 
 import dev.jorel.commandapi.CommandTree
 import dev.jorel.commandapi.arguments.Argument
+import dev.jorel.commandapi.arguments.ArgumentSuggestions
 import dev.jorel.commandapi.arguments.CustomArgument
 import dev.jorel.commandapi.arguments.StringArgument
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
@@ -14,12 +15,28 @@ class TimerDisplayArgument(nodeName: String) :
                 appendPrefix()
                 error("Diese Timer-Anzeige existiert nicht.")
             })
-    })
+    }) {
+    init {
+        this.replaceSuggestions(
+            ArgumentSuggestions.stringCollection {
+                TimerDisplay.entries.map { it.name }
+            }
+        )
+    }
+}
 
 inline fun CommandTree.timerDisplayArgument(
     nodeName: String,
     optional: Boolean = false,
     block: Argument<*>.() -> Unit = {}
 ): CommandTree = then(
+    TimerDisplayArgument(nodeName).setOptional(optional).apply(block)
+)
+
+inline fun Argument<*>.timerDisplayArgument(
+    nodeName: String,
+    optional: Boolean = false,
+    block: Argument<*>.() -> Unit = {}
+): Argument<*> = then(
     TimerDisplayArgument(nodeName).setOptional(optional).apply(block)
 )
