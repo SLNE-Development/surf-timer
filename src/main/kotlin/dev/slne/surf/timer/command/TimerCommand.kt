@@ -86,11 +86,13 @@ fun timerCommand() = commandTree("timer") {
                 }
 
                 if (timer.remainingSeconds == 0L) {
+                    timer.remainingSeconds = timer.seconds
+                    timer.paused = false
+
                     executor.sendText {
                         appendPrefix()
                         error("Der Timer wurde neu gestartet, da er bereits abgelaufen ist.")
                     }
-                    timer.remainingSeconds = timer.seconds
                     return@anyExecutor
                 }
 

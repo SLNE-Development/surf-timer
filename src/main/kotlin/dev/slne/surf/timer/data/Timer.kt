@@ -13,9 +13,11 @@ import kotlinx.serialization.encoding.Encoder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
+import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.time.Duration
 
 @Serializable(with = Timer.TimerSerializer::class)
+@ConfigSerializable
 data class Timer(
     val id: String,
     var seconds: Long,
@@ -91,6 +93,7 @@ data class Timer(
         }
         forEachPlayer {
             it.sendText {
+                appendPrefix()
                 append(message)
             }
         }
@@ -102,7 +105,7 @@ data class Timer(
                 it.sendActionBar(buildText {
                     spacer("»")
                     appendSpace()
-                    error("Der Timer ist pausiert.".toSmallCaps(), TextDecoration.ITALIC)
+                    error("Der Timer ist pausiert.".toSmallCaps(), TextDecoration.BOLD)
                     appendSpace()
                     spacer("«")
                 })
