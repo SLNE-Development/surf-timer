@@ -19,6 +19,18 @@ data class StorageConfig(
             edit {
                 timers = timerManager.getTimers()
             }
+
+            plugin.logger.info("Successfully saved ${timerManager.getTimers().size} timers to storage.yml")
+        }
+
+        fun loadTimers() {
+            val config = reloadFromFile()
+
+            config.timers.forEach {
+                timerManager.addTimer(it)
+            }
+
+            plugin.logger.info("Successfully loaded ${config.timers.size} timers from storage.yml")
         }
     }
 }

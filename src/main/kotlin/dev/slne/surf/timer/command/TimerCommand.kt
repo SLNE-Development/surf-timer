@@ -36,6 +36,7 @@ fun timerCommand() = commandTree("timer") {
                             actionbar = true
                             paused = true
                             chat = true
+                            sound = true
                         }
                     )
 

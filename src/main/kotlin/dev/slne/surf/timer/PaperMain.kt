@@ -11,6 +11,7 @@ val plugin get() = JavaPlugin.getPlugin(PaperMain::class.java)
 class PaperMain : SuspendingJavaPlugin() {
     override fun onEnable() {
         TimerManager.startUpdating()
+        StorageConfig.loadTimers()
 
         timerCommand()
     }

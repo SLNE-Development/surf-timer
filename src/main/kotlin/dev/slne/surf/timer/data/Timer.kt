@@ -3,6 +3,7 @@ package dev.slne.surf.timer.data
 import dev.slne.surf.surfapi.bukkit.api.util.forEachPlayer
 import dev.slne.surf.surfapi.core.api.font.toSmallCaps
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
+import dev.slne.surf.surfapi.core.api.messages.adventure.playSound
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -13,6 +14,7 @@ import kotlinx.serialization.encoding.Encoder
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
+import org.bukkit.Sound
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 import java.time.Duration
 
@@ -21,19 +23,17 @@ import java.time.Duration
 data class Timer(
     val id: String,
     var seconds: Long,
-) {
-    var remainingSeconds: Long = seconds
-    var chat: Boolean = false
-    var actionbar: Boolean = false
-    var hologram: Boolean = false
-    var paused: Boolean = false
+    var remainingSeconds: Long = seconds,
+    var chat: Boolean = false,
+    var actionbar: Boolean = false,
+    var hologram: Boolean = false,
+    var paused: Boolean = false,
+    var sound: Boolean = false,
     var chatFormat: Component = buildText {
-        info("noch")
+        info("Es verbleiben noch")
         appendSpace()
         variableValue("<time>")
-        appendSpace()
-        info("verbleibend")
-    }
+    },
     var actionbarFormat: Component = buildText {
         spacer("»")
         appendSpace()
@@ -45,7 +45,7 @@ data class Timer(
         appendSpace()
         spacer("«")
     }
-
+) {
     fun toggleDisplay(display: TimerDisplay): Boolean {
         when (display) {
             TimerDisplay.CHAT -> {
@@ -62,6 +62,11 @@ data class Timer(
                 hologram = !hologram
                 return hologram
             }
+
+            TimerDisplay.SOUND -> {
+                sound = !sound
+                return false
+            }
         }
     }
 
@@ -72,18 +77,35 @@ data class Timer(
     }
 
     fun update() {
-        if (remainingSeconds == 0L) {
+        if (remainingSeconds == 0L && !paused) {
             paused = true
+            forEachPlayer {
+                it.playSound(true) {
+                    type(Sound.ENTITY_ENDER_DRAGON_GROWL)
+                }
+            }
         }
 
-        if (chat && !paused) {
-            if (shouldNotify()) {
+        if (shouldNotify() && !paused) {
+            if (sound) {
+                broadcastSound()
+            }
+
+            if (chat) {
                 broadcastChat()
             }
         }
 
         if (actionbar) {
             broadcastActionbar()
+        }
+    }
+
+    private fun broadcastSound() {
+        forEachPlayer {
+            it.playSound(true) {
+                type(Sound.BLOCK_NOTE_BLOCK_PLING)
+            }
         }
     }
 
