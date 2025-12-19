@@ -4,6 +4,10 @@ import dev.slne.surf.surfapi.bukkit.api.hook.papi.expansion.PapiPlaceholder
 import dev.slne.surf.timer.manager.timerManager
 import org.bukkit.OfflinePlayer
 
+/**
+ * Placeholder to get the remaining time of a timer.
+ * Usage: %timer_time_<timer_id>%
+ */
 object TimerTimePlaceholder : PapiPlaceholder("time") {
     override fun parse(
         player: OfflinePlayer,
