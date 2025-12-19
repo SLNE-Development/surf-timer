@@ -1,12 +1,21 @@
-package dev.slne.surf.timer
+package dev.slne.surf.timer.data
 
 import dev.slne.surf.surfapi.bukkit.api.util.forEachPlayer
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import java.time.Duration
 
+@Serializable(with = Timer.TimerSerializer::class)
 data class Timer(
+    val id: String,
     var seconds: Long,
 ) {
     var remainingSeconds: Long = seconds
@@ -31,6 +40,25 @@ data class Timer(
         info("verbleibend")
         appendSpace()
         spacer("«")
+    }
+
+    fun toggleDisplay(display: TimerDisplay): Boolean {
+        when (display) {
+            TimerDisplay.CHAT -> {
+                chat = !chat
+                return chat
+            }
+
+            TimerDisplay.ACTIONBAR -> {
+                actionbar = !actionbar
+                return actionbar
+            }
+
+            TimerDisplay.HOLOGRAM -> {
+                hologram = !hologram
+                return hologram
+            }
+        }
     }
 
     fun removeSecond() {
@@ -128,5 +156,38 @@ data class Timer(
         thresholds.addAll(finerSteps.filter { it < totalSeconds })
 
         return remainingSeconds in thresholds
+    }
+
+    object TimerSerializer : KSerializer<Timer> {
+        override val descriptor = PrimitiveSerialDescriptor("Timer", PrimitiveKind.STRING)
+
+        override fun serialize(
+            encoder: Encoder,
+            value: Timer
+        ) {
+            encoder.encodeString(value.id)
+            encoder.encodeLong(value.seconds)
+            encoder.encodeLong(value.remainingSeconds)
+            encoder.encodeBoolean(value.chat)
+            encoder.encodeBoolean(value.actionbar)
+            encoder.encodeBoolean(value.hologram)
+            encoder.encodeBoolean(value.paused)
+            encoder.encodeString(GsonComponentSerializer.gson().serialize(value.actionbarFormat))
+            encoder.encodeString(GsonComponentSerializer.gson().serialize(value.chatFormat))
+        }
+
+        override fun deserialize(decoder: Decoder) = Timer(
+            id = decoder.decodeString(),
+            seconds = decoder.decodeLong()
+        ).apply {
+            remainingSeconds = decoder.decodeLong()
+            chat = decoder.decodeBoolean()
+            actionbar = decoder.decodeBoolean()
+            hologram = decoder.decodeBoolean()
+            paused = decoder.decodeBoolean()
+            actionbarFormat =
+                GsonComponentSerializer.gson().deserialize(decoder.decodeString())
+            chatFormat = GsonComponentSerializer.gson().deserialize(decoder.decodeString())
+        }
     }
 }

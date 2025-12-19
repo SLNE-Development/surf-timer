@@ -1,6 +1,6 @@
 package dev.slne.surf.timer.manager
 
-import dev.slne.surf.timer.Timer
+import dev.slne.surf.timer.data.Timer
 import dev.slne.surf.timer.plugin
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.Bukkit
@@ -11,8 +11,6 @@ val timerManager = TimerManager()
 class TimerManager {
     private val timers = mutableListOf<Timer>()
 
-    fun getTimers() = timers
-
     fun addTimer(timer: Timer) {
         timers.add(timer)
     }
@@ -20,6 +18,10 @@ class TimerManager {
     fun removeTimer(timer: Timer) {
         timers.remove(timer)
     }
+
+    fun getTimers() = timers
+    fun exists(id: String) = timers.any { it.id == id }
+    fun getTimerById(id: String) = timers.find { it.id == id }
 
     fun update() {
         timers.forEach {

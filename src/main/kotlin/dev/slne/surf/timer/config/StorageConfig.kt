@@ -1,7 +1,7 @@
 package dev.slne.surf.timer.config
 
 import dev.slne.surf.surfapi.core.api.config.SpongeYmlConfigClass
-import dev.slne.surf.timer.Timer
+import dev.slne.surf.timer.data.Timer
 import dev.slne.surf.timer.manager.timerManager
 import dev.slne.surf.timer.plugin
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
